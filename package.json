@@ -1,0 +1,8 @@
+{
+  "name": "sleep-tracker",
+  "version": "1.0.0",
+  "description": "Sleep Tracker App",
+  "scripts": {
+    "start": "npx serve -l 12000"
+  }
+}
