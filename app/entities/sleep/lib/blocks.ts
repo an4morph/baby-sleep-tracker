@@ -1,52 +1,5 @@
-export interface WakePeriod {
-  start: string
-  end: string
-}
-
-export interface DayData {
-  date: string
-  wake_periods: WakePeriod[]
-}
-
-export interface NightSleep {
-  type: 'ns'
-  start: Date
-  end: Date
-  durationMin: number
-}
-
-export interface WakeBlock {
-  type: 'wb'
-  index: number
-  start: Date
-  end: Date
-  durationMin: number
-}
-
-export interface NapBlock {
-  type: 'nap'
-  index: number
-  start: Date
-  end: Date
-  durationMin: number
-}
-
-export type DayBlock = NightSleep | WakeBlock | NapBlock
-
-export function durMin(a: Date, b: Date): number {
-  return Math.round((b.getTime() - a.getTime()) / 60000)
-}
-
-export function fmtTime(dt: Date): string {
-  return dt.toTimeString().slice(0, 5)
-}
-
-export function fmtDur(mins: number): string {
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  if (h > 0) return `${h}ч ${m}м`
-  return `${m}м`
-}
+import { durMin } from '../../../shared/lib/time'
+import type { DayData, DayBlock } from '../model/types'
 
 export function buildDayBlocks(day: DayData, prevLastWakeEnd?: Date): DayBlock[] {
   const wbs = day.wake_periods.map((w) => ({
