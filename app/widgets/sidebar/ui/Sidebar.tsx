@@ -11,8 +11,8 @@ interface Props {
 export function Sidebar({ isOpen, onClose, theme, onToggleTheme }: Props) {
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen w-[280px] z-[200] flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] transition-transform duration-300 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed top-0 left-0 h-[100svh] w-[280px] flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] transition-transform duration-300 ${
+        isOpen ? 'translate-x-0 z-[200] pointer-events-auto' : '-translate-x-full pointer-events-none'
       }`}
     >
       <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
@@ -50,8 +50,7 @@ export function Sidebar({ isOpen, onClose, theme, onToggleTheme }: Props) {
       <ThemeToggle
         theme={theme}
         onToggle={onToggleTheme}
-        label="Сменить тему"
-        className="mx-3 mb-3 flex items-center justify-center gap-2 p-3 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-border)] transition-colors text-sm"
+        className="mx-3 mb-3 flex items-center justify-center p-3 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-border)] transition-colors"
       />
     </aside>
   )

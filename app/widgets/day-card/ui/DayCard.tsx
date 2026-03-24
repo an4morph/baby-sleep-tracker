@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { buildDayBlocks, buildTimelineSegments } from '../../../entities/sleep'
 import { getNormForMonth, getAgeMonths, checkNorm } from '../../../entities/norm'
 import type { DayData } from '../../../entities/sleep'
@@ -16,9 +17,9 @@ const segColor: Record<string, string> = {
 function Arrow({ dev }: { dev: NormDeviation }) {
   if (dev === 'normal') return null
   if (dev === 'above') {
-    return <span className="text-[#e17055] text-[10px] ml-1" title="Выше нормы">&#9650;</span>
+    return <span className="text-[#f5c842] text-xs ml-1 font-bold" title="Выше нормы">▲</span>
   }
-  return <span className="text-[#0984e3] text-[10px] ml-1" title="Ниже нормы">&#9660;</span>
+  return <span className="text-[#7c83fd] text-xs ml-1 font-bold" title="Ниже нормы">▼</span>
 }
 
 interface Props {
@@ -64,6 +65,56 @@ export function DayCard({ day, prevLastWakeEnd, birthDate }: Props) {
   const nsDev = norm && nsMin > 0 ? checkNorm(nsMin, norm.ns) : 'normal'
   const osDev = norm && nsMin > 0 ? checkNorm(totalSleep, norm.os) : 'normal'
   const napCountDev = norm ? checkNorm(napCount, norm.naps) : 'normal'
+
+  // Build summary items
+  const summaryItems: Array<{ label: string; value: string; dev: NormDeviation; tip: string }> = []
+  if (norm) {
+    if (svbDev !== 'normal') summaryItems.push({
+      label: 'СВБ', value: fmtDur(totalWB), dev: svbDev,
+      tip: svbDev === 'above' ? 'Много бодрствования — попробуйте добавить дневной сон' : 'Мало бодрствования — попробуйте убрать один дневной сон'
+    })
+    if (sdsDev !== 'normal') summaryItems.push({
+      label: 'СДС', value: fmtDur(totalNap), dev: sdsDev,
+      tip: sdsDev === 'above' ? 'Много дневного сна — сократите длительность или уберите один сон' : 'Мало дневного сна — увеличьте длительность снов или добавьте сон'
+    })
+    if (nsDev !== 'normal') summaryItems.push({
+      label: 'НС', value: fmtDur(nsMin), dev: nsDev,
+      tip: nsDev === 'above' ? 'Длинный ночной сон — скорее всего вариант нормы' : 'Короткий ночной сон — попробуйте раньше укладывать'
+    })
+    if (osDev !== 'normal') summaryItems.push({
+      label: 'ОС', value: fmtDur(totalSleep), dev: osDev,
+      tip: osDev === 'above' ? 'Много общего сна — проверьте самочувствие ребёнка' : 'Мало общего сна — увеличьте НС или ДС'
+    })
+    if (napCountDev !== 'normal') summaryItems.push({
+      label: 'Кол-во ДС', value: String(napCount), dev: napCountDev,
+      tip: napCountDev === 'above' ? 'Много снов — попробуйте объединить/убрать один' : 'Мало снов — попробуйте добавить дневной сон'
+    })
+    // Check individual WB blocks for deviations
+    const wbBlocks = blocks.filter(b => b.type === 'wb')
+    wbBlocks.forEach(b => {
+      if (b.type === 'wb') {
+        const d = checkNorm(b.durationMin, norm.ww)
+        if (d !== 'normal') summaryItems.push({
+          label: `ВБ${b.index}`, value: fmtDur(b.durationMin), dev: d,
+          tip: d === 'above' ? `ВБ${b.index} слишком длинное — укладывайте раньше` : `ВБ${b.index} слишком короткое — продлите бодрствование`
+        })
+      }
+    })
+    // Check individual nap durations
+    const napBlocks = blocks.filter(b => b.type === 'nap')
+    napBlocks.forEach(b => {
+      if (b.type === 'nap') {
+        const d = checkNorm(b.durationMin, norm.ds)
+        if (d !== 'normal') summaryItems.push({
+          label: `ДС${b.index}`, value: fmtDur(b.durationMin), dev: d,
+          tip: d === 'above' ? `ДС${b.index} слишком длинный — будите раньше` : `ДС${b.index} слишком короткий — попробуйте продлить`
+        })
+      }
+    })
+  }
+
+  const [showSummary, setShowSummary] = useState(false)
+  const hasDeviations = summaryItems.length > 0
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-md">
@@ -160,6 +211,42 @@ export function DayCard({ day, prevLastWakeEnd, birthDate }: Props) {
           </div>
         )}
       </div>
+
+      {/* Summary button */}
+      {hasDeviations && (
+        <div className="bg-[var(--color-surface)] border-t border-[var(--color-border)]/30">
+          <button
+            onClick={() => setShowSummary(!showSummary)}
+            className="w-full px-[18px] py-2.5 flex items-center justify-between text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]/20 transition-colors"
+          >
+            <span>Сводка ({summaryItems.length})</span>
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className={`transition-transform duration-200 ${showSummary ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {showSummary && (
+            <div className="px-[18px] pb-3 flex flex-col gap-2">
+              {summaryItems.map((item, idx) => (
+                <div key={idx} className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Arrow dev={item.dev} />
+                    <span className="font-semibold">{item.label}</span>
+                    <span className="text-[var(--color-text-secondary)]">{item.value}</span>
+                    <span className={item.dev === 'above' ? 'text-[#f5c842] text-xs' : 'text-[#7c83fd] text-xs'}>
+                      {item.dev === 'above' ? 'выше нормы' : 'ниже нормы'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] pl-5">{item.tip}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
