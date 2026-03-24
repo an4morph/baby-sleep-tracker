@@ -1,5 +1,5 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './tailwind.css?url'
 import { Header } from './widgets/header'
 import { Sidebar } from './widgets/sidebar'
@@ -10,7 +10,9 @@ export function links() {
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarMounted, setSidebarMounted] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     try {
@@ -20,6 +22,19 @@ export default function App() {
       document.documentElement.setAttribute('data-theme', initial)
     } catch (e) {}
   }, [])
+
+  const openSidebar = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setSidebarMounted(true)
+    // mount first, then trigger open animation on next frame
+    requestAnimationFrame(() => setSidebarOpen(true))
+  }
+
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+    // unmount after transition completes
+    closeTimer.current = setTimeout(() => setSidebarMounted(false), 320)
+  }
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'
@@ -39,25 +54,26 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="bg-[var(--color-bg)] text-[var(--color-text)] min-h-screen transition-colors duration-200">
+      <body className="bg-[var(--color-bg)] text-[var(--color-text)] min-h-[100svh] transition-colors duration-200">
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
-          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenSidebar={openSidebar}
         />
 
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-        />
+        {sidebarMounted && (
+          <Sidebar
+            isOpen={sidebarOpen}
+            onClose={closeSidebar}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
+        )}
 
-        {/* Overlay */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-[150] bg-black/40"
-            onClick={() => setSidebarOpen(false)}
+            onClick={closeSidebar}
           />
         )}
 

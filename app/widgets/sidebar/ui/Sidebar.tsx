@@ -11,8 +11,8 @@ interface Props {
 export function Sidebar({ isOpen, onClose, theme, onToggleTheme }: Props) {
   return (
     <aside
-      className={`fixed top-0 left-0 h-[100svh] w-[280px] flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] transition-transform duration-300 ${
-        isOpen ? 'translate-x-0 z-[200] pointer-events-auto' : '-translate-x-full pointer-events-none'
+      className={`fixed top-0 left-0 h-[100svh] w-[280px] z-[200] flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] transition-transform duration-300 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
       <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">

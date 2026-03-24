@@ -42,7 +42,8 @@ export function Header({ theme, onToggleTheme, onOpenSidebar }: Props) {
       />
       <button
         onClick={onOpenSidebar}
-        className="md:hidden flex flex-col justify-center gap-[5px] p-1.5 rounded-lg hover:bg-[var(--color-border)] transition-colors"
+        onTouchEnd={(e) => { e.preventDefault(); onOpenSidebar(); }}
+        className="md:hidden flex flex-col justify-center gap-[5px] p-2 rounded-lg hover:bg-[var(--color-border)] transition-colors"
         aria-label="Открыть меню"
       >
         <span className="block w-[22px] h-[2px] bg-[var(--color-text)] rounded" />
