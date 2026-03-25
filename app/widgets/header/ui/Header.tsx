@@ -12,7 +12,7 @@ export function Header({ theme, onToggleTheme }: Props) {
       <div className="text-[#6c5ce7] dark:text-[#a29bfe] font-bold text-xl whitespace-nowrap">
         Sleep Tracker
       </div>
-      <nav className="flex gap-2">
+      <nav className="hidden md:flex gap-2">
         {[
           { to: '/', label: 'Трекер' },
           { to: '/statistics', label: 'Статистика' },
@@ -34,11 +34,23 @@ export function Header({ theme, onToggleTheme }: Props) {
           </NavLink>
         ))}
       </nav>
-      <ThemeToggle
-        theme={theme}
-        onToggle={onToggleTheme}
-        className="flex items-center p-1.5 rounded-lg hover:bg-[var(--color-border)] transition-colors"
-      />
+      <div className="flex items-center gap-2">
+        <ThemeToggle
+          theme={theme}
+          onToggle={onToggleTheme}
+          className="hidden md:flex items-center p-1.5 rounded-lg hover:bg-[var(--color-border)] transition-colors"
+        />
+        {/* Burger — CSS only, toggles #nav-toggle checkbox */}
+        <label
+          htmlFor="nav-toggle"
+          className="md:hidden flex flex-col justify-center gap-[5px] p-2 rounded-lg cursor-pointer hover:bg-[var(--color-border)] transition-colors"
+          aria-label="Открыть меню"
+        >
+          <span className="block w-[22px] h-[2px] bg-[var(--color-text)] rounded" />
+          <span className="block w-[22px] h-[2px] bg-[var(--color-text)] rounded" />
+          <span className="block w-[22px] h-[2px] bg-[var(--color-text)] rounded" />
+        </label>
+      </div>
     </header>
   )
 }
