@@ -1,18 +1,14 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './tailwind.css?url'
 import { Header } from './widgets/header'
-import { Sidebar } from './widgets/sidebar'
 
 export function links() {
   return [{ rel: 'stylesheet', href: styles }]
 }
 
 export default function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarMounted, setSidebarMounted] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     try {
@@ -22,19 +18,6 @@ export default function App() {
       document.documentElement.setAttribute('data-theme', initial)
     } catch (e) {}
   }, [])
-
-  const openSidebar = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current)
-    setSidebarMounted(true)
-    // mount first, then trigger open animation on next frame
-    requestAnimationFrame(() => setSidebarOpen(true))
-  }
-
-  const closeSidebar = () => {
-    setSidebarOpen(false)
-    // unmount after transition completes
-    closeTimer.current = setTimeout(() => setSidebarMounted(false), 320)
-  }
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'
@@ -58,24 +41,7 @@ export default function App() {
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
-          onOpenSidebar={openSidebar}
         />
-
-        {sidebarMounted && (
-          <Sidebar
-            isOpen={sidebarOpen}
-            onClose={closeSidebar}
-            theme={theme}
-            onToggleTheme={toggleTheme}
-          />
-        )}
-
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-[150] bg-black/40"
-            onClick={closeSidebar}
-          />
-        )}
 
         <main className="max-w-[1400px] mx-auto px-6 py-8">
           <Outlet />
