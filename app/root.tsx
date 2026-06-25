@@ -1,15 +1,26 @@
-import { Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration } from '@remix-run/react'
+import type { LoaderFunctionArgs } from '@remix-run/node'
+import { Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { useEffect, useState } from 'react'
 import styles from './tailwind.css?url'
 import { Header } from './widgets/header'
 import { ThemeToggle } from './features/toggle-theme'
+
+export async function loader(_: LoaderFunctionArgs) {
+  const childPath = join(process.cwd(), 'data', 'child.json')
+  const child: { name: string } = JSON.parse(readFileSync(childPath, 'utf-8'))
+  return { childName: child.name }
+}
 
 export function links() {
   return [{ rel: 'stylesheet', href: styles }]
 }
 
 export default function App() {
+  const { childName } = useLoaderData<typeof loader>()
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     try {
@@ -48,9 +59,9 @@ export default function App() {
         {/* CSS-only sidebar toggle — must be before all peer-checked targets */}
         <input id="nav-toggle" type="checkbox" className="sr-only peer" />
 
-        <Header theme={theme} onToggleTheme={toggleTheme} />
+        <Header theme={theme} onToggleTheme={toggleTheme} onOpenSettings={() => setSettingsOpen(true)} />
 
-        {/* Sidebar */}
+        {/* Nav Sidebar */}
         <aside className="fixed top-0 left-0 h-[100svh] w-[280px] z-[200] flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] transition-transform duration-300 -translate-x-full pointer-events-none peer-checked:translate-x-0 peer-checked:pointer-events-auto">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
             <span className="font-semibold text-lg">Меню</span>
@@ -86,11 +97,43 @@ export default function App() {
           />
         </aside>
 
-        {/* Overlay */}
+        {/* Nav Overlay */}
         <label
           htmlFor="nav-toggle"
           className="fixed inset-0 z-[150] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 peer-checked:opacity-100 peer-checked:pointer-events-auto"
         />
+
+        {/* Settings Sidebar */}
+        <aside
+          className={`fixed top-0 right-0 h-[100svh] w-[280px] z-[200] flex flex-col bg-[var(--color-sidebar-bg)] border-l border-[var(--color-border)] transition-transform duration-300 ${
+            settingsOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
+          }`}
+        >
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
+            <span className="font-semibold text-lg">Настройки</span>
+            <button
+              onClick={() => setSettingsOpen(false)}
+              className="text-2xl cursor-pointer hover:bg-[var(--color-border)] px-2 py-0.5 rounded transition-colors leading-none"
+              aria-label="Закрыть"
+            >
+              ×
+            </button>
+          </div>
+          <div className="flex flex-col items-center gap-3 px-5 pt-8">
+            <div className="w-16 h-16 rounded-full bg-[#6c5ce7] flex items-center justify-center text-white text-2xl font-bold select-none">
+              {childName[0].toUpperCase()}
+            </div>
+            <span className="text-lg font-semibold">{childName}</span>
+          </div>
+        </aside>
+
+        {/* Settings Overlay */}
+        {settingsOpen && (
+          <div
+            className="fixed inset-0 z-[150] bg-black/40"
+            onClick={() => setSettingsOpen(false)}
+          />
+        )}
 
         <main className="max-w-[1400px] mx-auto px-6 py-8">
           <Outlet />
